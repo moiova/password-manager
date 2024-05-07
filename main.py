@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+import json
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 import random
@@ -33,11 +34,18 @@ def add_data_to_file():
     website = entry_website.get()
     email = entry_email.get()
     password = entry_password.get()
+    new_data = {
+        website: {
+            "email": email,
+            "password": password,
+        }
+    }
 
     # empty fields are not acceptable
     if len(website) == 0 or len(email) == 0 or len(password) == 0:
         messagebox.showerror(title="ERROR", message="All fields should be filled out")
 
+    # pop-up box to double-check the data
     else:
         save_data = messagebox.askokcancel(title="Save to file",
                                            message=f'Are you sure you want to save this details:\n '
@@ -45,9 +53,18 @@ def add_data_to_file():
                                                    f'Password: {password}\n Ok to save?')
 
         if save_data:
-            with open("my_text.txt", mode="a") as my_file:
-                my_file.write(f"{website} | {email} | {password}\n")
-            clear_inputs()
+            try:
+                with open("my_text.json", mode="r") as my_file:
+                    data = json.load(my_file)
+            except FileNotFoundError:
+                with open("my_text.json", mode="w") as my_file:
+                    json.dump(new_data, my_file, indent=4)
+            else:
+                data.update(new_data)
+                with open("my_text.json", mode="w") as my_file:
+                    json.dump(data, my_file, indent=4)
+            finally:
+                clear_inputs()
 
 
 def clear_inputs():
@@ -67,9 +84,11 @@ canvas.grid(column=1, row=0)
 
 label_website = Label(text="Website", bg="white", pady=3)
 label_website.grid(column=0, row=1)
-entry_website = Entry(width=50)
-entry_website.grid(column=1, row=1, columnspan=2)
+entry_website = Entry(width=32)
+entry_website.grid(column=1, row=1)
 entry_website.focus()
+button_search = Button(text="Search", bg="white", width=14)
+button_search.grid(column=2, row=1)
 
 label_password = Label(text="Password", bg="white", pady=1)
 label_password.grid(column=0, row=3)
